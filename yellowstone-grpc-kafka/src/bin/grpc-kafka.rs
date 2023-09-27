@@ -274,6 +274,9 @@ impl ArgsAction {
                         Some(UpdateOneof::Ping(_)) => unreachable!("Ping message not expected"),
                         Some(UpdateOneof::BlockMeta(msg)) => msg.slot,
                         Some(UpdateOneof::Entry(msg)) => msg.slot,
+                        Some(_) => {
+                            continue;
+                        }
                         None => unreachable!("Expect valid message"),
                     };
                     let payload = message.encode_to_vec();

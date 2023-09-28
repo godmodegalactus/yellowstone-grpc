@@ -464,7 +464,7 @@ impl<'a> MessageRef<'a> {
                 parent_blockhash: message.parent_blockhash.clone(),
                 executed_transaction_count: message.executed_transaction_count,
             }),
-            Self::BankingStageTransactionResult(message) => UpdateOneof::BankingStageTransactionResult(
+            Self::BankingStageTransactionResult(message) => UpdateOneof::BankingTransactionErrors(
                 SubscribeUpdateBankingTransactionResults {
                     slot: message.slot,
                     signature: message.signature.to_string(),
@@ -1140,6 +1140,7 @@ impl Geyser for GrpcService {
                 entry: HashMap::new(),
                 commitment: None,
                 accounts_data_slice: Vec::new(),
+                subsribe_banking_transaction_results: false,
             },
             &self.config.filters,
         )

@@ -31,6 +31,7 @@ message SubscribeRequest {
   map<string, SubscribeRequestFilterEntry> entry = 8;
   optional CommitmentLevel commitment = 6;
   repeated SubscribeRequestAccountsDataSlice accounts_data_slice = 7;
+  bool subsribe_banking_transaction_results = 9;
 }
 
 message SubscribeRequestFilterAccounts {

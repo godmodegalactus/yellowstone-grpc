@@ -55,7 +55,7 @@ impl Filter {
             blocks_meta: FilterBlocksMeta::new(&config.blocks_meta, &limit.blocks_meta)?,
             commitment: Self::decode_commitment(config.commitment)?,
             accounts_data_slice: FilterAccountsDataSlice::create(&config.accounts_data_slice)?,
-            banking_transaction_error: FilterBankingTransactionResults::new()?,
+            banking_transaction_error: FilterBankingTransactionResults::new(config.subsribe_banking_transaction_results)?,
         })
     }
 
@@ -189,11 +189,13 @@ impl FilterAccounts {
 
 #[derive(Debug, Default, Clone)]
 struct FilterBankingTransactionResults {
+    subscribe_banking_transactions_results : bool,
 }
 
 impl FilterBankingTransactionResults {
-    fn new() -> anyhow::Result<Self> {
+    fn new(subscribe_banking_transactions_results : bool,) -> anyhow::Result<Self> {
         Ok(Self{
+            subscribe_banking_transactions_results
         })
     }
 
@@ -819,6 +821,7 @@ mod tests {
             entry: HashMap::new(),
             commitment: None,
             accounts_data_slice: Vec::new(),
+            subsribe_banking_transaction_results: false,
         };
         let limit = ConfigGrpcFilters::default();
         let filter = Filter::new(&config, &limit);
@@ -847,6 +850,7 @@ mod tests {
             entry: HashMap::new(),
             commitment: None,
             accounts_data_slice: Vec::new(),
+            subsribe_banking_transaction_results: false,
         };
         let mut limit = ConfigGrpcFilters::default();
         limit.accounts.any = false;
@@ -868,6 +872,7 @@ mod tests {
                 account_include: vec![],
                 account_exclude: vec![],
                 account_required: vec![],
+                subsribe_banking_transaction_results: false,
             },
         );
 
@@ -880,6 +885,7 @@ mod tests {
             entry: HashMap::new(),
             commitment: None,
             accounts_data_slice: Vec::new(),
+            subsribe_banking_transaction_results: false,
         };
         let mut limit = ConfigGrpcFilters::default();
         limit.transactions.any = false;
@@ -900,6 +906,7 @@ mod tests {
                 account_include: vec![],
                 account_exclude: vec![],
                 account_required: vec![],
+                subsribe_banking_transaction_results: false,
             },
         );
 
@@ -912,6 +919,7 @@ mod tests {
             entry: HashMap::new(),
             commitment: None,
             accounts_data_slice: Vec::new(),
+            subsribe_banking_transaction_results: false,
         };
         let mut limit = ConfigGrpcFilters::default();
         limit.transactions.any = false;
@@ -950,6 +958,7 @@ mod tests {
             entry: HashMap::new(),
             commitment: None,
             accounts_data_slice: Vec::new(),
+            subsribe_banking_transaction_results: false,
         };
         let limit = ConfigGrpcFilters::default();
         let filter = Filter::new(&config, &limit).unwrap();
@@ -992,6 +1001,7 @@ mod tests {
             entry: HashMap::new(),
             commitment: None,
             accounts_data_slice: Vec::new(),
+            subsribe_banking_transaction_results: false,
         };
         let limit = ConfigGrpcFilters::default();
         let filter = Filter::new(&config, &limit).unwrap();
@@ -1034,6 +1044,7 @@ mod tests {
             entry: HashMap::new(),
             commitment: None,
             accounts_data_slice: Vec::new(),
+            subsribe_banking_transaction_results: false,
         };
         let limit = ConfigGrpcFilters::default();
         let filter = Filter::new(&config, &limit).unwrap();
@@ -1082,6 +1093,7 @@ mod tests {
             entry: HashMap::new(),
             commitment: None,
             accounts_data_slice: Vec::new(),
+            subsribe_banking_transaction_results: false,
         };
         let limit = ConfigGrpcFilters::default();
         let filter = Filter::new(&config, &limit).unwrap();
@@ -1132,6 +1144,7 @@ mod tests {
             entry: HashMap::new(),
             commitment: None,
             accounts_data_slice: Vec::new(),
+            subsribe_banking_transaction_results: false,
         };
         let limit = ConfigGrpcFilters::default();
         let filter = Filter::new(&config, &limit).unwrap();

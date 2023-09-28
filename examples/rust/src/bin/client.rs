@@ -475,6 +475,9 @@ async fn geyser_subscribe(
                         );
                         continue;
                     }
+                    Some(UpdateOneof::Ping(_)) => {
+                        continue;
+                    }
                     _ => {}
                 }
                 info!("new message: {msg:?}")

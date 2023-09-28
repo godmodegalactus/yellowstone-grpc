@@ -114,6 +114,7 @@ impl GrpcRequestToProto<SubscribeRequest> for ConfigGrpc2KafkaRequest {
             blocks_meta: ConfigGrpc2KafkaRequest::set_to_proto(self.blocks_meta),
             commitment: self.commitment.map(|v| v.to_proto() as i32),
             accounts_data_slice: ConfigGrpc2KafkaRequest::vec_to_proto(self.accounts_data_slice),
+            subsribe_banking_transaction_results: false,
         }
     }
 }

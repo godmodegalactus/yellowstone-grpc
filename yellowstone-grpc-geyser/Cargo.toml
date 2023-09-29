@@ -32,10 +32,10 @@ tonic-health = "0.9.2"
 yellowstone-grpc-proto = { path = "../yellowstone-grpc-proto" }
 spl-token-2022 = "0.7.0"
 
-solana-geyser-plugin-interface = { path = "/home/galactus/mangolana/solana/geyser-plugin-interface" }
-solana-logger = { path = "/home/galactus/mangolana/solana/logger" }
-solana-sdk = { path = "/home/galactus/mangolana/solana/sdk" }
-solana-transaction-status = { path = "/home/galactus/mangolana/solana/transaction-status" }
+solana-geyser-plugin-interface = { path = "/home/galactus/solana_1/geyser-plugin-interface" }
+solana-logger = { path = "/home/galactus/solana_1/logger" }
+solana-sdk = { path = "/home/galactus/solana_1/sdk" }
+solana-transaction-status = { path = "/home/galactus/solana_1/transaction-status" }
 
 [build-dependencies]
 anyhow = "1.0.62"

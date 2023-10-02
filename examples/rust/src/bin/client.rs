@@ -304,7 +304,7 @@ impl Action {
                         blocks_meta,
                         commitment: commitment.map(|x| x as i32),
                         accounts_data_slice,
-                        subsribe_banking_transaction_results: false,
+                        subsribe_banking_transaction_results: true,
                     },
                     args.resub.unwrap_or(0),
                 ))

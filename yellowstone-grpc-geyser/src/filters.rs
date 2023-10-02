@@ -200,11 +200,11 @@ impl FilterBankingTransactionResults {
     }
 
     fn get_filters<'a>(&self, message: &'a BankingTransactionMessage) -> Vec<(Vec<String>, MessageRef<'a>)> {
-        if self.subscribe_banking_transactions_results {
+        //if self.subscribe_banking_transactions_results {
             vec![(vec!["All".to_string()], MessageRef::BankingStageTransactionResult(message))]
-        } else {
-            vec![]
-        }
+        //} else {
+        //    vec![]
+        //}
     }
 }
 

@@ -104,7 +104,7 @@ async fn main() -> anyhow::Result<()> {
             blocks_meta: hashmap! { "".to_owned() => SubscribeRequestFilterBlocksMeta {} },
             commitment: Some(commitment as i32),
             accounts_data_slice: vec![],
-            subsribe_banking_transaction_results: false,
+            subsribe_banking_transaction_results: true,
         })
         .await?;
 

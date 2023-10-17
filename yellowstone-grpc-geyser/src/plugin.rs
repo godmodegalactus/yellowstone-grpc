@@ -1,3 +1,5 @@
+use solana_sdk::transaction::SanitizedTransaction;
+
 use crate::grpc::BankingTransactionMessage;
 
 use {
@@ -217,13 +219,13 @@ impl GeyserPlugin for Plugin {
 
     fn notify_banking_stage_transaction_results(
         &self,
-        transaction: solana_sdk::signature::Signature,
+        transaction: &SanitizedTransaction,
         error: Option<solana_sdk::transaction::TransactionError>,
         slot: u64,
     ) -> PluginResult<()> {
         self.with_inner(|inner| {
             let message = Message::BankingTransactionResult(BankingTransactionMessage {
-                signature: transaction,
+                signature: transaction.signature().clone(),
                 transaction_error: error,
                 slot,
             });

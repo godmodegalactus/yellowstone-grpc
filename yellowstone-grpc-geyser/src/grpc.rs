@@ -1,4 +1,5 @@
-use solana_sdk::{transaction::TransactionError, slot_history::Slot};
+use clap::builder::TypedValueParser;
+use solana_sdk::{instruction::AccountMeta, slot_history::Slot, transaction::TransactionError};
 
 use {
     crate::{
@@ -13,10 +14,10 @@ use {
             GetLatestBlockhashRequest, GetLatestBlockhashResponse, GetSlotRequest, GetSlotResponse,
             GetVersionRequest, GetVersionResponse, IsBlockhashValidRequest,
             IsBlockhashValidResponse, PingRequest, PongResponse, SubscribeRequest, SubscribeUpdate,
-            SubscribeUpdateAccount, SubscribeUpdateAccountInfo, SubscribeUpdateBlock,
+            SubscribeUpdateAccount, SubscribeUpdateAccountInfo,
+            SubscribeUpdateBankingTransactionResults, SubscribeUpdateBlock,
             SubscribeUpdateBlockMeta, SubscribeUpdateEntry, SubscribeUpdatePing,
             SubscribeUpdateSlot, SubscribeUpdateTransaction, SubscribeUpdateTransactionInfo,
-            SubscribeUpdateBankingTransactionResults,
         },
         version::VERSION,
     },
@@ -298,10 +299,17 @@ impl<'a> From<&'a ReplicaBlockInfoV2<'a>> for MessageBlockMeta {
 }
 
 #[derive(Debug, Clone)]
+pub struct BankingStageAccount {
+    pub account: Pubkey,
+    pub is_writable: bool,
+}
+
+#[derive(Debug, Clone)]
 pub struct BankingTransactionMessage {
-    pub signature : Signature,
-    pub transaction_error : Option<TransactionError>,
+    pub signature: Signature,
+    pub transaction_error: Option<TransactionError>,
     pub slot: Slot,
+    pub accounts: Vec<BankingStageAccount>,
 }
 
 #[derive(Debug, Clone)]
@@ -337,7 +345,7 @@ impl Message {
             Self::Entry(_) => "Entry",
             Self::Block(_) => "Block",
             Self::BlockMeta(_) => "BlockMeta",
-            Self::BankingTransactionResult(_) => "BankingTransactionResult", 
+            Self::BankingTransactionResult(_) => "BankingTransactionResult",
         }
     }
 }
@@ -464,15 +472,26 @@ impl<'a> MessageRef<'a> {
                 parent_blockhash: message.parent_blockhash.clone(),
                 executed_transaction_count: message.executed_transaction_count,
             }),
-            Self::BankingStageTransactionResult(message) => UpdateOneof::BankingTransactionErrors(
-                SubscribeUpdateBankingTransactionResults {
+            Self::BankingStageTransactionResult(message) => {
+                UpdateOneof::BankingTransactionErrors(SubscribeUpdateBankingTransactionResults {
                     slot: message.slot,
                     signature: message.signature.to_string(),
-                    error: message.transaction_error.as_ref().map(|x| proto::TransactionError {
-                        err: bincode::serialize(&x).unwrap()
-                    }),
-                }
-            )
+                    error: message
+                        .transaction_error
+                        .as_ref()
+                        .map(|x| proto::TransactionError {
+                            err: bincode::serialize(&x).unwrap(),
+                        }),
+                    accounts: message
+                        .accounts
+                        .iter()
+                        .map(|x| proto::BankingStageAccount {
+                            account: x.account.to_string(),
+                            is_writable: x.is_writable,
+                        })
+                        .collect(),
+                })
+            }
         }
     }
 }

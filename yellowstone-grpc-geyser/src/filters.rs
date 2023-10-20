@@ -55,7 +55,9 @@ impl Filter {
             blocks_meta: FilterBlocksMeta::new(&config.blocks_meta, &limit.blocks_meta)?,
             commitment: Self::decode_commitment(config.commitment)?,
             accounts_data_slice: FilterAccountsDataSlice::create(&config.accounts_data_slice)?,
-            banking_transaction_error: FilterBankingTransactionResults::new(config.subsribe_banking_transaction_results)?,
+            banking_transaction_error: FilterBankingTransactionResults::new(
+                config.subsribe_banking_transaction_results,
+            )?,
         })
     }
 
@@ -93,7 +95,9 @@ impl Filter {
             Message::Entry(message) => self.entry.get_filters(message),
             Message::Block(message) => self.blocks.get_filters(message),
             Message::BlockMeta(message) => self.blocks_meta.get_filters(message),
-            Message::BankingTransactionResult(message) => self.banking_transaction_error.get_filters(message),
+            Message::BankingTransactionResult(message) => {
+                self.banking_transaction_error.get_filters(message)
+            }
         }
     }
 
@@ -189,19 +193,25 @@ impl FilterAccounts {
 
 #[derive(Debug, Default, Clone)]
 struct FilterBankingTransactionResults {
-    subscribe_banking_transactions_results : bool,
+    subscribe_banking_transactions_results: bool,
 }
 
 impl FilterBankingTransactionResults {
-    fn new(subscribe_banking_transactions_results : bool,) -> anyhow::Result<Self> {
-        Ok(Self{
-            subscribe_banking_transactions_results
+    fn new(subscribe_banking_transactions_results: bool) -> anyhow::Result<Self> {
+        Ok(Self {
+            subscribe_banking_transactions_results,
         })
     }
 
-    fn get_filters<'a>(&self, message: &'a BankingTransactionMessage) -> Vec<(Vec<String>, MessageRef<'a>)> {
+    fn get_filters<'a>(
+        &self,
+        message: &'a BankingTransactionMessage,
+    ) -> Vec<(Vec<String>, MessageRef<'a>)> {
         //if self.subscribe_banking_transactions_results {
-            vec![(vec!["All".to_string()], MessageRef::BankingStageTransactionResult(message))]
+        vec![(
+            vec!["All".to_string()],
+            MessageRef::BankingStageTransactionResult(message),
+        )]
         //} else {
         //    vec![]
         //}

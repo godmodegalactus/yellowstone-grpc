@@ -1,6 +1,3 @@
-use clap::builder::TypedValueParser;
-use solana_sdk::{instruction::AccountMeta, slot_history::Slot, transaction::TransactionError};
-
 use {
     crate::{
         config::{ConfigBlockFailAction, ConfigGrpc},
@@ -30,7 +27,8 @@ use {
         clock::{UnixTimestamp, MAX_RECENT_BLOCKHASHES},
         pubkey::Pubkey,
         signature::Signature,
-        transaction::SanitizedTransaction,
+        slot_history::Slot,
+        transaction::{SanitizedTransaction, TransactionError},
     },
     solana_transaction_status::{Reward, TransactionStatusMeta},
     std::{

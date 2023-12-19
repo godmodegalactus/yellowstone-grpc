@@ -22,7 +22,7 @@ use {
             SubscribeRequestFilterBlocks, SubscribeRequestFilterBlocksMeta,
             SubscribeRequestFilterEntry, SubscribeRequestFilterSlots,
             SubscribeRequestFilterTransactions, SubscribeRequestPing, SubscribeUpdateAccount,
-            SubscribeUpdatePreviousAccountInfo, SubscribeUpdateTransaction,
+            SubscribeUpdateTransaction,
         },
         tonic::service::Interceptor,
     },
@@ -345,7 +345,6 @@ pub struct AccountPretty {
     data: String,
     write_version: u64,
     txn_signature: String,
-    previous_account_state: Option<PreviousStateAccountPretty>,
 }
 
 impl From<SubscribeUpdateAccount> for AccountPretty {
@@ -354,7 +353,6 @@ impl From<SubscribeUpdateAccount> for AccountPretty {
             is_startup,
             slot,
             account,
-            previous_account_state,
         }: SubscribeUpdateAccount,
     ) -> Self {
         let account = account.expect("should be defined");
@@ -369,29 +367,6 @@ impl From<SubscribeUpdateAccount> for AccountPretty {
             data: hex::encode(account.data),
             write_version: account.write_version,
             txn_signature: bs58::encode(account.txn_signature.unwrap_or_default()).into_string(),
-            previous_account_state: previous_account_state.map(|acc| acc.into()),
-        }
-    }
-}
-
-#[derive(Debug)]
-#[allow(dead_code)]
-pub struct PreviousStateAccountPretty {
-    lamports: u64,
-    owner: Pubkey,
-    executable: bool,
-    rent_epoch: u64,
-    data: String,
-}
-
-impl From<SubscribeUpdatePreviousAccountInfo> for PreviousStateAccountPretty {
-    fn from(account: SubscribeUpdatePreviousAccountInfo) -> Self {
-        Self {
-            lamports: account.lamports,
-            owner: Pubkey::try_from(account.owner).expect("valid pubkey"),
-            executable: account.executable,
-            rent_epoch: account.rent_epoch,
-            data: hex::encode(account.data),
         }
     }
 }

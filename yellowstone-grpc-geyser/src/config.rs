@@ -20,6 +20,7 @@ pub struct Config {
     /// Action on block re-construction error
     #[serde(default)]
     pub block_fail_action: ConfigBlockFailAction,
+    pub get_previous_account_states: bool,
 }
 
 impl Config {

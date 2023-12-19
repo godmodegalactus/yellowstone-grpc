@@ -23,6 +23,7 @@ pub struct PluginInner {
     grpc_channel: mpsc::UnboundedSender<Message>,
     grpc_shutdown: Arc<Notify>,
     prometheus: PrometheusService,
+    get_previous_account_states: bool,
 }
 
 impl PluginInner {
@@ -84,6 +85,7 @@ impl GeyserPlugin for Plugin {
             grpc_channel,
             grpc_shutdown,
             prometheus,
+            get_previous_account_states: config.get_previous_account_states,
         });
 
         Ok(())
@@ -220,9 +222,10 @@ impl GeyserPlugin for Plugin {
         true
     }
 
-    // fn enable_pre_trasaction_execution_accounts_data(&self) -> bool {
-    //     true
-    // }
+    fn enable_pre_trasaction_execution_accounts_data(&self) -> bool {
+        let pre_tx_data = self.inner.as_ref().map(|x| x.get_previous_account_states);
+        pre_tx_data.unwrap_or_default()
+    }
 }
 
 #[no_mangle]

@@ -195,9 +195,9 @@ impl FilterAccounts {
         let mut filter = FilterAccountsMatch::new(self);
         filter.match_account(&message.account.pubkey);
         filter.match_owner(&message.account.owner);
-        if let Some(ref previous_account) = message.previous_account_state {
-            if message.account.owner != previous_account.owner {
-                filter.match_owner(&previous_account.owner);
+        if let Some(ref previous_owner) = message.previous_owner {
+            if message.account.owner != *previous_owner {
+                filter.match_owner(previous_owner);
             }
         }
         filter.match_data(&message.account.data);

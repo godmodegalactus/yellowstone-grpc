@@ -50,36 +50,10 @@ use {
             IsBlockhashValidResponse, PingRequest, PongResponse, SubscribeRequest, SubscribeUpdate,
             SubscribeUpdateAccount, SubscribeUpdateAccountInfo, SubscribeUpdateBlock,
             SubscribeUpdateBlockMeta, SubscribeUpdateEntry, SubscribeUpdatePing,
-            SubscribeUpdatePreviousAccountInfo, SubscribeUpdateSlot, SubscribeUpdateTransaction,
-            SubscribeUpdateTransactionInfo,
+            SubscribeUpdateSlot, SubscribeUpdateTransaction, SubscribeUpdateTransactionInfo,
         },
     },
 };
-
-#[derive(Debug, Clone)]
-pub struct MessagePreviousAccountInfo {
-    pub lamports: u64,
-    pub owner: Pubkey,
-    pub executable: bool,
-    pub rent_epoch: u64,
-    pub data: Vec<u8>,
-}
-
-impl MessagePreviousAccountInfo {
-    fn to_proto(
-        &self,
-        accounts_data_slice: &[FilterAccountsDataSlice],
-    ) -> SubscribeUpdatePreviousAccountInfo {
-        let data = FilterAccountsDataSlice::filter_data(accounts_data_slice, &self.data);
-        SubscribeUpdatePreviousAccountInfo {
-            lamports: self.lamports,
-            owner: self.owner.as_ref().into(),
-            executable: self.executable,
-            rent_epoch: self.rent_epoch,
-            data,
-        }
-    }
-}
 
 #[derive(Debug, Clone)]
 pub struct MessageAccountInfo {
@@ -127,7 +101,7 @@ pub struct MessageAccount {
     pub account: MessageAccountInfo,
     pub slot: u64,
     pub is_startup: bool,
-    pub previous_account_state: Option<MessagePreviousAccountInfo>,
+    pub previous_owner: Option<Pubkey>,
 }
 
 impl<'a> From<(&'a ReplicaAccountInfoV3<'a>, u64, bool)> for MessageAccount {
@@ -145,7 +119,7 @@ impl<'a> From<(&'a ReplicaAccountInfoV3<'a>, u64, bool)> for MessageAccount {
             },
             slot,
             is_startup,
-            previous_account_state: None,
+            previous_owner: None,
         }
     }
 }
@@ -162,15 +136,10 @@ impl<'a> From<(&'a ReplicaAccountInfoV4<'a>, u64, bool)> for MessageAccount {
                 write_version: account.write_version,
                 txn_signature: account.txn.map(|txn| *txn.signature()),
             },
-            previous_account_state: account.previous_account_state.as_ref().map(
-                |previous_account| MessagePreviousAccountInfo {
-                    lamports: previous_account.lamports,
-                    owner: Pubkey::try_from(previous_account.owner).expect("valid Pubkey"),
-                    executable: previous_account.executable,
-                    rent_epoch: previous_account.rent_epoch,
-                    data: previous_account.data.into(),
-                },
-            ),
+            previous_owner: account
+                .previous_account_state
+                .as_ref()
+                .map(|x| Pubkey::try_from(x.owner).expect("valid Pubkey")),
             slot,
             is_startup,
         }
@@ -460,10 +429,6 @@ impl<'a> MessageRef<'a> {
                 account: Some(message.account.to_proto(accounts_data_slice)),
                 slot: message.slot,
                 is_startup: message.is_startup,
-                previous_account_state: message
-                    .previous_account_state
-                    .as_ref()
-                    .map(|acc| acc.to_proto(accounts_data_slice)),
             }),
             Self::Transaction(message) => UpdateOneof::Transaction(SubscribeUpdateTransaction {
                 transaction: Some(message.transaction.to_proto()),

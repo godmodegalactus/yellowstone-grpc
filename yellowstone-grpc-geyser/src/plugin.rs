@@ -1,17 +1,17 @@
-use solana_sdk::transaction::SanitizedTransaction;
-
-use crate::grpc::{BankingStageAccount, BankingTransactionMessage};
-
 use {
     crate::{
         config::Config,
-        grpc::{GrpcService, Message},
+        grpc::{BankingStageAccount, BankingTransactionMessage, GrpcService, Message},
         prom::{self, PrometheusService, MESSAGE_QUEUE_SIZE},
     },
     solana_geyser_plugin_interface::geyser_plugin_interface::{
         GeyserPlugin, GeyserPluginError, ReplicaAccountInfoVersions, ReplicaBlockInfoVersions,
         ReplicaEntryInfoVersions, ReplicaTransactionInfoVersions, Result as PluginResult,
         SlotStatus,
+    },
+    solana_sdk::{
+        borsh0_10::try_from_slice_unchecked, compute_budget,
+        compute_budget::ComputeBudgetInstruction, transaction::SanitizedTransaction,
     },
     std::{
         sync::{
@@ -260,9 +260,13 @@ impl GeyserPlugin for Plugin {
         error: Option<solana_sdk::transaction::TransactionError>,
         slot: u64,
     ) -> PluginResult<()> {
+        if error.is_none() || transaction.is_simple_vote_transaction() {
+            return Ok(());
+        }
         self.with_inner(|inner| {
             let message = transaction.message();
-            let accounts = message
+
+            let accounts: Vec<_> = message
                 .account_keys()
                 .iter()
                 .enumerate()
@@ -271,12 +275,51 @@ impl GeyserPlugin for Plugin {
                     is_writable: message.is_writable(index),
                 })
                 .collect();
+            let mut nb_non_cb_ix = 0;
+            let mut cu_requested = None;
+            let mut prioritization_fees = 0;
+            for ix in message.instructions() {
+                if accounts[ix.program_id_index as usize]
+                    .account
+                    .eq(&compute_budget::id())
+                {
+                    let ix_which =
+                        try_from_slice_unchecked::<ComputeBudgetInstruction>(ix.data.as_slice());
+                    if let Ok(ix_which) = ix_which {
+                        match ix_which {
+                            ComputeBudgetInstruction::RequestUnitsDeprecated {
+                                units,
+                                additional_fee,
+                            } => {
+                                cu_requested = Some(units as u64);
+                                if additional_fee > 0 {
+                                    prioritization_fees = (units as u64)
+                                        .saturating_mul(1000)
+                                        .saturating_div(additional_fee as u64);
+                                }
+                            }
+                            ComputeBudgetInstruction::SetComputeUnitLimit(units) => {
+                                cu_requested = Some(units as u64);
+                            }
+                            ComputeBudgetInstruction::SetComputeUnitPrice(price) => {
+                                prioritization_fees = price;
+                            }
+                            _ => {}
+                        }
+                    }
+                } else {
+                    nb_non_cb_ix += 1;
+                }
+            }
+            let cu_requested = cu_requested.unwrap_or(nb_non_cb_ix * 200_000);
 
             let message = Message::BankingTransactionResult(BankingTransactionMessage {
                 signature: transaction.signature().clone(),
                 transaction_error: error,
                 slot,
                 accounts,
+                cu_requested,
+                prioritization_fees,
             });
             inner.send_message(message);
             Ok(())

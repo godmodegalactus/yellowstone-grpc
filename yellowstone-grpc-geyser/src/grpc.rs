@@ -314,6 +314,8 @@ pub struct BankingTransactionMessage {
     pub transaction_error: Option<TransactionError>,
     pub slot: Slot,
     pub accounts: Vec<BankingStageAccount>,
+    pub cu_requested: u64,
+    pub prioritization_fees: u64,
 }
 
 #[derive(Debug, Clone)]
@@ -476,12 +478,11 @@ impl<'a> MessageRef<'a> {
                 UpdateOneof::BankingTransactionErrors(SubscribeUpdateBankingTransactionResults {
                     slot: message.slot,
                     signature: message.signature.to_string(),
-                    error: message
-                        .transaction_error
-                        .as_ref()
-                        .map(|x| yellowstone_grpc_proto::prelude::TransactionError {
+                    error: message.transaction_error.as_ref().map(|x| {
+                        yellowstone_grpc_proto::prelude::TransactionError {
                             err: bincode::serialize(&x).unwrap(),
-                        }),
+                        }
+                    }),
                     accounts: message
                         .accounts
                         .iter()
@@ -490,6 +491,8 @@ impl<'a> MessageRef<'a> {
                             is_writable: x.is_writable,
                         })
                         .collect(),
+                    cu_requested: message.cu_requested,
+                    prioritization_fees: message.prioritization_fees,
                 })
             }
         }

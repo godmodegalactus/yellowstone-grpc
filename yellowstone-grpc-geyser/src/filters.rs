@@ -196,6 +196,11 @@ impl FilterAccounts {
         filter.match_account(&message.account.pubkey);
         filter.match_owner(&message.account.owner);
         filter.match_data(&message.account.data);
+        if let Some(ref prev_owner) = message.prev_owner {
+            if message.account.owner != *prev_owner {
+                filter.match_owner(prev_owner);
+            }
+        }
         vec![(filter.get_filters(), MessageRef::Account(message))]
     }
 }

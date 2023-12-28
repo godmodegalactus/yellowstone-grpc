@@ -201,6 +201,7 @@ impl GeyserPlugin for Plugin {
                     unreachable!("ReplicaBlockInfoVersions::V0_0_1 is not supported")
                 }
                 ReplicaBlockInfoVersions::V0_0_2(info) => info,
+                ReplicaBlockInfoVersions::V0_0_3(_) => todo!(),
             };
 
             let message = Message::BlockMeta(blockinfo.into());

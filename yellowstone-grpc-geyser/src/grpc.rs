@@ -1,3 +1,5 @@
+use solana_geyser_plugin_interface::geyser_plugin_interface::ReplicaAccountInfoV4;
+
 use {
     crate::{
         config::{ConfigBlockFailAction, ConfigGrpc},
@@ -101,6 +103,7 @@ pub struct MessageAccount {
     pub account: MessageAccountInfo,
     pub slot: u64,
     pub is_startup: bool,
+    pub prev_owner: Option<Pubkey>,
 }
 
 impl<'a> From<(&'a ReplicaAccountInfoV3<'a>, u64, bool)> for MessageAccount {
@@ -116,6 +119,27 @@ impl<'a> From<(&'a ReplicaAccountInfoV3<'a>, u64, bool)> for MessageAccount {
                 write_version: account.write_version,
                 txn_signature: account.txn.map(|txn| *txn.signature()),
             },
+            slot,
+            is_startup,
+            prev_owner: None,
+        }
+    }
+}
+
+impl<'a> From<(&'a ReplicaAccountInfoV4<'a>, u64, bool)> for MessageAccount {
+    fn from((account, slot, is_startup): (&'a ReplicaAccountInfoV4<'a>, u64, bool)) -> Self {
+        Self {
+            account: MessageAccountInfo {
+                pubkey: Pubkey::try_from(account.pubkey).expect("valid Pubkey"),
+                lamports: account.lamports,
+                owner: Pubkey::try_from(account.owner).expect("valid Pubkey"),
+                executable: account.executable,
+                rent_epoch: account.rent_epoch,
+                data: account.data.into(),
+                write_version: account.write_version,
+                txn_signature: account.txn.map(|txn| *txn.signature()),
+            },
+            prev_owner: account.previous_account_state.as_ref().map(|x| Pubkey::try_from(x.owner).expect("valid Pubkey")),
             slot,
             is_startup,
         }
@@ -407,6 +431,7 @@ impl<'a> MessageRef<'a> {
                 account: Some(message.account.to_proto(accounts_data_slice)),
                 slot: message.slot,
                 is_startup: message.is_startup,
+                prev_owner: message.prev_owner.map(|x| x.as_ref().into()),
             }),
             Self::Transaction(message) => UpdateOneof::Transaction(SubscribeUpdateTransaction {
                 transaction: Some(message.transaction.to_proto()),

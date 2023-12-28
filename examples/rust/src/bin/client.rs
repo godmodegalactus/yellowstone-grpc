@@ -353,6 +353,7 @@ impl From<SubscribeUpdateAccount> for AccountPretty {
             is_startup,
             slot,
             account,
+            ..
         }: SubscribeUpdateAccount,
     ) -> Self {
         let account = account.expect("should be defined");
